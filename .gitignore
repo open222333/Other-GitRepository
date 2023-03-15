@@ -1,0 +1,7 @@
+*
+
+# 反向忽略
+!.gitignore
+!git_config.ini.default
+!pull_all.py
+!README.md
