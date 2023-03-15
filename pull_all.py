@@ -28,7 +28,11 @@ elif LOG_LEVEL == 'ERROR':
 elif LOG_LEVEL == 'CRITICAL':
     logger.setLevel(logging.CRITICAL)
 
-log_handler = RotatingFileHandler(f'{__name__}.log', maxBytes=5000, backupCount=1)
+logs_dir = 'logs'
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
+
+log_handler = RotatingFileHandler(f'{logs_dir}/{__name__}.log', maxBytes=5000, backupCount=1)
 msg_handler = logging.StreamHandler()
 log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log_handler.setFormatter(log_formatter)
@@ -78,17 +82,21 @@ if __name__ == '__main__':
     files = os.listdir(DIR_PATH)
 
     for file in files:
-        git_path = f'{DIR_PATH}/{file}'
-        if os.path.isdir(git_path):
-            git_obj = Git(
-                dir_path=git_path,
-                user=USERNAME,
-                token=PASSWORD,
-                git_domain=GITDOMAIN
-            )
-            if git_obj.is_git_repo():
-                git_obj.set_repo(git_path)
-                result = git_obj.do_pull()
-                logger.info(f'git pull {file} 結果:{result}')
-            else:
-                logger.info(f'{file} 非git專案資料夾')
+        try:
+            git_path = f'{DIR_PATH}/{file}'
+            if os.path.isdir(git_path):
+                logger.info(f'執行 {DIR_PATH}/{file}')
+                git_obj = Git(
+                    dir_path=git_path,
+                    user=USERNAME,
+                    token=PASSWORD,
+                    git_domain=GITDOMAIN
+                )
+                if git_obj.is_git_repo():
+                    git_obj.set_repo()
+                    result = git_obj.do_pull()
+                    logger.info(f'git pull {file} 結果:{result}')
+                else:
+                    logger.info(f'{file} 非git專案資料夾')
+        except Exception as err:
+            logger.error(err, exc_info=True)
