@@ -6,6 +6,11 @@ USERNAME=
 ; git token
 PASSWORD=
 ; git主機 預設 github.com
-GITDOMAIN=
+; GITDOMAIN=
 ; 設定紀錄log等級 DEBUG,INFO,WARNING,ERROR,CRITICAL 預設WARNING
 ; LOG_LEVEL=
+
+; 建立 git config name
+NAME=
+; 建立 git config email
+EMAIL=

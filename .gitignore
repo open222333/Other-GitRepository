@@ -2,6 +2,7 @@
 
 # 反向忽略
 !.gitignore
+!requirements.txt
 !git_config.ini.default
 !pull_all.py
 !README.md
