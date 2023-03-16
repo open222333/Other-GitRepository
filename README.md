@@ -25,5 +25,6 @@ GITDOMAIN=
 ## 終端機執行
 
 ```bash
-python pull_all.py
+cd path/to/GitRepository/
+python path/to/GitRepository/pull_all.py
 ```

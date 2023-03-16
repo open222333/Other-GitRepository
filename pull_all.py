@@ -59,9 +59,6 @@ class Git:
         self.user = user
         self.token = token
         self.git_domain = git_domain
-        command = f"git config --global credential.helper \'store --file {credentials_file_path}\'"
-        logger.debug(command)
-        os.system(command)
 
     def set_git_repo_dir(self, dir_path: str):
         """設置 git專案資料夾
