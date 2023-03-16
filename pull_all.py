@@ -34,9 +34,11 @@ logs_dir = 'logs'
 if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
 
-log_handler = RotatingFileHandler(f'{logs_dir}/{__name__}.log', maxBytes=500, backupCount=1)
+log_handler = RotatingFileHandler(
+    f'{logs_dir}/{__name__}.log', maxBytes=500, backupCount=1)
 msg_handler = logging.StreamHandler()
-log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log_formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log_handler.setFormatter(log_formatter)
 msg_handler.setFormatter(log_formatter)
 logger.addHandler(log_handler)
@@ -90,8 +92,20 @@ if __name__ == '__main__':
     files = os.listdir(DIR_PATH)
     if NAME and EMAIL:
         if '.git' in files:
-            os.system(f"cd {DIR_PATH} && git config user.name {NAME}")
-            os.system(f"cd {DIR_PATH} && git config user.email {EMAIL}")
+            repo = git.Repo(DIR_PATH)
+            repo_config = repo.config_reader()
+            try:
+                root_user_name = repo_config.get_value('user', 'name')
+                root_user_email = repo_config.get_value('user', 'email')
+                if root_user_name != NAME or root_user_name == None:
+                    logger.info(f'{DIR_PATH} git config 設置 {NAME}')
+                    os.system(f"cd {DIR_PATH} && git config user.name {NAME}")
+                if root_user_email != EMAIL or root_user_email == None:
+                    logger.info(f'{DIR_PATH} git config 設置 {EMAIL}')
+                    os.system(f"cd {DIR_PATH} && git config user.email {EMAIL}")
+            except Exception as err:
+                logger.error(err, exc_info=True)
+    
     git_obj = Git(
         user=USERNAME,
         token=PASSWORD,
@@ -104,12 +118,24 @@ if __name__ == '__main__':
                 logger.info(f'執行 {DIR_PATH}/{file}')
                 git_obj.set_git_repo_dir(git_path)
                 if git_obj.is_git_repo():
-                    if NAME and EMAIL:
-                        logger.info(f'{file} git config 設置 {NAME} {EMAIL}')
-                        os.system(f"cd {git_path} && git config user.name {NAME}")
-                        os.system(f"cd {git_path} && git config user.email {EMAIL}")
-                    logger.info(f'{file} 執行 git pull ')
+
                     git_obj.set_repo()
+
+                    if NAME and EMAIL:
+                        repo_config = git_obj.repo.config_reader()
+                        try:
+                            user_name = repo_config.get_value('user', 'name')
+                            user_email = repo_config.get_value('user', 'email')
+                            if user_name != NAME or user_name == None:
+                                logger.info(f'{file} git config 設置 {NAME}')
+                                os.system(f"cd {git_path} && git config user.name {NAME}")
+                            if user_email != EMAIL or user_email == None:
+                                logger.info(f'{file} git config 設置 {EMAIL}')
+                                os.system(f"cd {git_path} && git config user.email {EMAIL}")
+                        except Exception as err:
+                            logger.error(err, exc_info=True)
+
+                    logger.info(f'{file} 執行 git pull ')
                     result = git_obj.do_pull()
                     logger.info(f'git pull {file} 結果:{result}')
                 else:
