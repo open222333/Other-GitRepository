@@ -2,11 +2,10 @@ import logging
 import git
 import os
 from configparser import ConfigParser
-from logging.handlers import RotatingFileHandler
 
 
 config = ConfigParser()
-config.read('git_config.ini', encoding='utf-8')
+config.read(os.path.join('conf', 'git_config.ini'), encoding='utf-8')
 USERNAME = config.get('GIT', 'USERNAME')
 PASSWORD = config.get('GIT', 'PASSWORD')
 DIR_PATH = config.get('GIT', 'DIR_PATH')
@@ -17,7 +16,7 @@ NAME = config.get('GIT', 'NAME', fallback=None)
 EMAIL = config.get('GIT', 'EMAIL', fallback=None)
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('GIT')
 
 if LOG_LEVEL == 'DEBUG':
     logger.setLevel(logging.DEBUG)
@@ -34,28 +33,22 @@ logs_dir = 'logs'
 if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
 
-log_handler = RotatingFileHandler(
-    f'{logs_dir}/{__name__}.log', maxBytes=500, backupCount=1)
 msg_handler = logging.StreamHandler()
-log_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-log_handler.setFormatter(log_formatter)
+log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 msg_handler.setFormatter(log_formatter)
-logger.addHandler(log_handler)
 logger.addHandler(msg_handler)
 
 
 class Git:
     '''使用git做一個類別'''
 
-    def __init__(self, user: str, token: str, git_domain: str, credentials_file_path: str = '.sample-credentials') -> None:
+    def __init__(self, user: str, token: str, git_domain: str) -> None:
         """建立 驗證檔案
 
         Args:
             user (str): 用戶名
             token (str): 驗證token
             git_domain (str): git主機
-            credentials_file_path (str): 驗證檔案名稱位置. Defaults to '.sample-credentials'.
         """
         ''''''
         self.user = user
@@ -105,7 +98,7 @@ if __name__ == '__main__':
                     os.system(f"cd {DIR_PATH} && git config user.email {EMAIL}")
             except Exception as err:
                 logger.error(err, exc_info=True)
-    
+
     git_obj = Git(
         user=USERNAME,
         token=PASSWORD,
