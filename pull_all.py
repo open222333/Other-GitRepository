@@ -1,137 +1,43 @@
-import logging
-import git
+from src import DIR_PATH, EMAIL, NAME, USERNAME, PASSWORD, GITDOMAIN
+from src import LOG_LEVEL
+from src.common_tool.src.logger import Log
+from src.git_tool import Git, GitConfig
+from src.common_tool.src.progress_bar import ProgressBar
 import os
-from configparser import ConfigParser
 
 
-config = ConfigParser()
-config.read(os.path.join('conf', 'git_config.ini'), encoding='utf-8')
-USERNAME = config.get('GIT', 'USERNAME')
-PASSWORD = config.get('GIT', 'PASSWORD')
-DIR_PATH = config.get('GIT', 'DIR_PATH')
-GITDOMAIN = config.get('GIT', 'GITDOMAIN', fallback='github.com')
-# 設定紀錄log等級 DEBUG,INFO,WARNING,ERROR,CRITICAL 預設WARNING
-LOG_LEVEL = config.get('GIT', 'LOG_LEVEL', fallback='WARNING')
-NAME = config.get('GIT', 'NAME', fallback=None)
-EMAIL = config.get('GIT', 'EMAIL', fallback=None)
-
-
-logger = logging.getLogger('GIT')
-
-if LOG_LEVEL == 'DEBUG':
-    logger.setLevel(logging.DEBUG)
-elif LOG_LEVEL == 'INFO':
-    logger.setLevel(logging.INFO)
-elif LOG_LEVEL == 'WARNING':
-    logger.setLevel(logging.WARNING)
-elif LOG_LEVEL == 'ERROR':
-    logger.setLevel(logging.ERROR)
-elif LOG_LEVEL == 'CRITICAL':
-    logger.setLevel(logging.CRITICAL)
-
-logs_dir = 'logs'
-if not os.path.exists(logs_dir):
-    os.makedirs(logs_dir)
-
-msg_handler = logging.StreamHandler()
-log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-msg_handler.setFormatter(log_formatter)
-logger.addHandler(msg_handler)
-
-
-class Git:
-    '''使用git做一個類別'''
-
-    def __init__(self, user: str, token: str, git_domain: str) -> None:
-        """建立 驗證檔案
-
-        Args:
-            user (str): 用戶名
-            token (str): 驗證token
-            git_domain (str): git主機
-        """
-        ''''''
-        self.user = user
-        self.token = token
-        self.git_domain = git_domain
-
-    def set_git_repo_dir(self, dir_path: str):
-        """設置 git專案資料夾
-
-        Args:
-            dir_path (str): 專案資料夾位置
-        """
-        self.dir_path = dir_path
-
-    def is_git_repo(self) -> bool:
-        '''檢查是否為git專案'''
-        all_items = os.listdir(self.dir_path)
-        return '.git' in all_items
-
-    def set_repo(self):
-        self.repo = git.Repo(self.dir_path)
-
-    def get_remote(self):
-        return self.repo.remotes
-
-    def do_pull(self):
-        git_action = self.repo.remote()
-        result = git_action.pull()
-        return [i.__str__() for i in result]
-
+logger = Log('Pull_All')
+logger.set_level(LOG_LEVEL)
+logger.set_msg_handler()
 
 if __name__ == '__main__':
 
     files = os.listdir(DIR_PATH)
+    
     if NAME and EMAIL:
-        if '.git' in files:
-            repo = git.Repo(DIR_PATH)
-            repo_config = repo.config_reader()
-            try:
-                root_user_name = repo_config.get_value('user', 'name')
-                root_user_email = repo_config.get_value('user', 'email')
-                if root_user_name != NAME or root_user_name == None:
-                    logger.info(f'{DIR_PATH} git config 設置 {NAME}')
-                    os.system(f"cd {DIR_PATH} && git config user.name {NAME}")
-                if root_user_email != EMAIL or root_user_email == None:
-                    logger.info(f'{DIR_PATH} git config 設置 {EMAIL}')
-                    os.system(f"cd {DIR_PATH} && git config user.email {EMAIL}")
-            except Exception as err:
-                logger.error(err, exc_info=True)
-
-    git_obj = Git(
-        user=USERNAME,
-        token=PASSWORD,
-        git_domain=GITDOMAIN
-    )
+        gitconfig = GitConfig(dir_path=DIR_PATH)
+        gitconfig.set_config(NAME, EMAIL)
+        
+    p = ProgressBar()
+    
     for file in files:
         try:
             git_path = f'{DIR_PATH}/{file}'
             if os.path.isdir(git_path):
-                logger.info(f'執行 {DIR_PATH}/{file}')
-                git_obj.set_git_repo_dir(git_path)
+                git_obj = Git(
+                    user=USERNAME,
+                    token=PASSWORD,
+                    git_domain=GITDOMAIN,
+                    dir_path=git_path
+                )
+                
                 if git_obj.is_git_repo():
-
                     git_obj.set_repo()
-
                     if NAME and EMAIL:
-                        repo_config = git_obj.repo.config_reader()
-                        try:
-                            user_name = repo_config.get_value('user', 'name')
-                            user_email = repo_config.get_value('user', 'email')
-                            if user_name != NAME or user_name == None:
-                                logger.info(f'{file} git config 設置 {NAME}')
-                                os.system(f"cd {git_path} && git config user.name {NAME}")
-                            if user_email != EMAIL or user_email == None:
-                                logger.info(f'{file} git config 設置 {EMAIL}')
-                                os.system(f"cd {git_path} && git config user.email {EMAIL}")
-                        except Exception as err:
-                            logger.error(err, exc_info=True)
-
-                    logger.info(f'{file} 執行 git pull ')
-                    result = git_obj.do_pull()
-                    logger.info(f'git pull {file} 結果:{result}')
+                        git_obj.set_config()
+                    result = len(git_obj.do_pull())
                 else:
-                    logger.info(f'{file} 非git專案資料夾')
+                    result = f'{file} 非git專案資料夾'
+            p(total=len(files), in_loop=True, detail=f'git 資料夾路徑 {git_path} {result}')
         except Exception as err:
             logger.error(err, exc_info=True)
