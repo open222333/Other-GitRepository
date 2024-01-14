@@ -30,11 +30,10 @@ if __name__ == '__main__':
                     git_domain=GITDOMAIN,
                     dir_path=git_path
                 )
-                
+                result = ''
                 if git_obj.is_git_repo():
-                    git_obj.set_repo()
                     if NAME and EMAIL:
-                        git_obj.set_config()
+                        git_obj.set_config(NAME, EMAIL)
                     result = len(git_obj.do_pull())
                 else:
                     result = f'{file} 非git專案資料夾'

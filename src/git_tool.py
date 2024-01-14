@@ -23,7 +23,8 @@ class Git:
         self.dir_path = dir_path
         self.git_domain = git_domain
 
-        self.repo = self.set_repo()
+        if self.is_git_repo():
+            self.repo = self.set_repo()
 
         self.logger.set_level(LOG_LEVEL)
         self.logger.set_msg_handler()
@@ -38,8 +39,11 @@ class Git:
 
     def is_git_repo(self) -> bool:
         '''檢查是否為git專案'''
-        all_items = os.listdir(self.dir_path)
-        return '.git' in all_items
+        try:
+            git.Repo(self.dir_path)
+            return True
+        except git.exc.InvalidGitRepositoryError:
+            return False
 
     def set_repo(self):
         self.repo = git.Repo(self.dir_path)
@@ -83,7 +87,7 @@ class GitConfig(Git):
     logger = Log('GitConfig')
 
     def __init__(self, dir_path: str = '.') -> None:
-        super().__init__(dir_path)
+        self.dir_path = dir_path
 
     def set_config(self, name: str, email: str):
         if self.is_git_repo():
