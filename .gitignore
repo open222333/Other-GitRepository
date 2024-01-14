@@ -2,6 +2,8 @@ repo/*
 !repo/README.md
 git_config.ini
 
+*.code-workspace
+
 logs/*
 
 
