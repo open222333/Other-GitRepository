@@ -24,7 +24,7 @@ class Git:
         self.git_domain = git_domain
 
         if self.is_git_repo():
-            self.repo = self.set_repo()
+            self.set_repo()
 
         self.logger.set_level(LOG_LEVEL)
         self.logger.set_msg_handler()
@@ -57,7 +57,7 @@ class Git:
             result = git_action.pull()
             return [i.__str__() for i in result]
         except Exception as e:
-            self.logger.error(f'pull 發生錯誤: {e}')
+            self.logger.error(f'pull 發生錯誤: {e}', exc_info=True)
             return []
 
     def set_config(self, name: str, email: str):
