@@ -5,6 +5,7 @@ git_config.ini
 *.code-workspace
 
 logs/*
+.vscode/
 
 
 # Byte-compiled / optimized / DLL files

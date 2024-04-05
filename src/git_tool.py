@@ -17,7 +17,6 @@ class Git:
             token (str): 驗證token
             git_domain (str): git主機
         """
-        ''''''
         self.user = user
         self.token = token
         self.dir_path = dir_path
